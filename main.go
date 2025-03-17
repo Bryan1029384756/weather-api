@@ -12,7 +12,6 @@ import (
 )
 
 func main() {
-
 	weather := mux.NewRouter()
 	weather.Path("/weather/{city}").Methods(http.MethodGet).HandlerFunc(controller.CurrentWeather)
 
@@ -27,8 +26,15 @@ func main() {
 		Methods(http.MethodGet).
 		HandlerFunc(v2.CurrentWeather)
 
-	if err := http.ListenAndServe(":"+config.Get().Port, handlers.CORS()(weather)); err != nil {
+	// Configure CORS with proper options
+	corsMiddleware := handlers.CORS(
+		handlers.AllowedOrigins([]string{"*"}),    // Allow requests from any origin
+		handlers.AllowedMethods([]string{"GET"}),  // Allow only GET requests
+		handlers.AllowedHeaders([]string{"Content-Type", "Accept"}),
+		handlers.ExposedHeaders([]string{}),
+	)
+
+	if err := http.ListenAndServe(":"+config.Get().Port, corsMiddleware(weather)); err != nil {
 		log.Fatal(err)
 	}
-
 }
